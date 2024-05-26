@@ -1,0 +1,106 @@
+<!-- local css for body -->
+<link rel="stylesheet" type="text/css" href="../css/file_viewer.css">
+<!-- local css for header -->
+<link rel="stylesheet" type="text/css" href="../css/header.css">
+
+<!-- header -->
+<div class="nav-bar" style="position: fixed;">
+    <a href="/" class="back-icon">
+        <i class="fa-solid fa-circle-arrow-left" style="color: #b8b8b8;"></i>
+    </a>
+    <div class="title">
+        CSV Upload
+    </div>
+    <div class="sub-title">
+        Viewer
+    </div>
+    <div class="file-name">
+        <%= fileName %>
+    </div>
+</div>
+
+<!-- search bar -->
+<div class="search-bar">
+    <form id="searchForm">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search data...">
+            <button id="go" class="search-btn" type="button">Go</button>
+        </div>
+    </form>
+    <div>
+        <p id="total-rows">Total Rows: <%= length %></p>
+    </div>
+</div>
+
+<!-- search results -->
+<div class="result-aria">
+    <table>
+        <thead>
+            <tr>
+                <% for (let h of head) { %>
+                    <th><%= h %></th>
+                <% } %>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let row of data) { %>
+                <tr>
+                    <% for (let key of Object.keys(row)) { %>
+                        <td><%= row[key] %></td>
+                    <% } %>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>">Previous</a>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>">Next</a>
+    <% } %>
+</div>
+
+<!-- Subscription Pricing Calculator -->
+<div class="subscription-calculator">
+    <h2>Subscription Pricing Calculator</h2>
+    <form id="pricingForm">
+        <input type="hidden" name="id" value="<%= fileId %>">
+        <input type="number" name="basePrice" placeholder="Base Price" required>
+        <input type="number" name="pricePerCreditLine" placeholder="Price per Credit Line" required>
+        <input type="number" name="pricePerCreditScorePoint" placeholder="Price per Credit Score Point" required>
+        <button type="submit">Calculate</button>
+    </form>
+    <div id="subscription-results"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    socket.on('uploadProgress', (data) => {
+        document.getElementById('progress').innerText = `Upload Progress: ${data.progress}%`;
+    });
+
+    document.getElementById('pricingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/calculate-subscription', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultsContainer = document.getElementById('subscription-results');
+            resultsContainer.innerHTML = '';
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.textContent = `Subscription Price for ${item.CreditScore} and ${item.CreditLines}: ${item.subscriptionPrice}`;
+                resultsContainer.appendChild(div);
+            });
+        });
+    });
+</script>
