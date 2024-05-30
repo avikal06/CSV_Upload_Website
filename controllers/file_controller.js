@@ -2,6 +2,7 @@ const fs = require('fs');
 const csvParser = require('csv-parser');
 const CSV = require('../models/csv');
 const path = require('path');
+import SocketIO from 'socket.io'
 
 module.exports.upload = async function(req, res) {
     try {
